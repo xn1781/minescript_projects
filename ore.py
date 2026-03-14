@@ -142,4 +142,4 @@ while True:
                     to_draw.append((float(x), float(y), float(z), ores[block]))
 
     script.set("shared_ores", to_draw)
-    time.sleep()
+    time.sleep(0.1)
