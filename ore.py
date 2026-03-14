@@ -1,3 +1,5 @@
+# very unoptimized!
+
 import system.lib.minescript as m
 import system.lib.java as java
 import time
