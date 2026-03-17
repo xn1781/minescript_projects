@@ -1,3 +1,5 @@
+# PYJINN SCRIPT, DONT RUN THIS DIRECTLY
+
 ARGB = JavaClass("net.minecraft.util.ARGB")
 
 Vec3 = JavaClass("net.minecraft.world.phys.Vec3")
