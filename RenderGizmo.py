@@ -1,5 +1,3 @@
-# PYJINN SCRIPT, DONT RUN THIS DIRECTLY
-
 ARGB = JavaClass("net.minecraft.util.ARGB")
 
 Vec3 = JavaClass("net.minecraft.world.phys.Vec3")
@@ -11,34 +9,63 @@ Direction = JavaClass("net.minecraft.core.Direction")
 Gizmos = JavaClass("net.minecraft.gizmos.Gizmos")
 GizmoStyle = JavaClass("net.minecraft.gizmos.GizmoStyle")
 
+# its annoying that i cant just do Gizmos[drawMethod] omfg
+# gizmoDrawMethod = {
+#     "blocks": "cuboid",
+#     "circles": "circle",
+#     "lines": "line",
+#     "arrows": "arrow",
+#     "plane": "rect",
+#     "rect": "rect",
+#     "point": "point"
+# }
+
+# THIS CODE IS BUNS
+def drawGizmo(gizmoType, activeGizmo):
+    if gizmoType == "blocks":
+        return Gizmos.cuboid(*activeGizmo[:-3])
+    elif gizmoType == "circles":
+        return Gizmos.circle(*activeGizmo[:-3])
+    elif gizmoType == "lines":
+        return Gizmos.line(*activeGizmo[:-3])
+    elif gizmoType == "arrows":
+        return Gizmos.arrow(*activeGizmo[:-3])
+    elif gizmoType == "plane":
+        return Gizmos.rect(*activeGizmo[:-3])
+    elif gizmoType == "rect":
+        return Gizmos.rect(*activeGizmo[:-3])
+    elif gizmoType == "point":
+        return Gizmos.point(*activeGizmo[:-3])
+
 class renderGizmo:
     def __init__(self):
-        self.gizmo_types = {
-            'blocks': {},
-            'circles': {},
-            'lines': {},
-            'arrows': {},
-            'plane': {},
-            'rect': {},
-            'point': {}
+        self.activeGizmos = {
+            "blocks": {},
+            "circles": {},
+            "lines": {},
+            "arrows": {},
+            "plane": {},
+            "rect": {},
+            "point": {}
         }
 
-        self.gizmo_ids = {
-            'blocks': 0,
-            'circles': 0,
-            'lines': 0,
-            'arrows': 0,
-            'plane': 0,
-            'rect': 0,
-            'point': 0
+        self.gizmoIds = {
+            "blocks": 0,
+            "circles": 0,
+            "lines": 0,
+            "arrows": 0,
+            "plane": 0,
+            "rect": 0,
+            "point": 0
         }
 
-    def _makeJavaABB(self, data): 
+    def _makeJavaAABB(self, data): 
         """INTERNAL"""
-        l = len(data)
-        if l == 3:
+        dataLength = len(data)
+        # wouldve used map() or 'int(pos) for pos in data' but it doesnt work in pyjinn scripts
+        if dataLength == 3:
             return AABB(BlockPos(int(data[0]), int(data[1]), int(data[2])))
-        if l == 6:
+        if dataLength == 6:
             return AABB(float(data[0]), float(data[1]), float(data[2]),
                         float(data[3]), float(data[4]), float(data[5]))
 
@@ -61,7 +88,7 @@ class renderGizmo:
     
     def _makeJavaFace(self, face):
         """INTERNAL"""
-        # return Direction[face]
+        # return Direction[face] whyyyy
         if face == "UP":
             return Direction.UP
         elif face == "DOWN":
@@ -75,108 +102,65 @@ class renderGizmo:
         elif face == "EAST":
             return Direction.EAST
 
-    def _addGizmo(self, gizmo_type, data):
+    def _addGizmo(self, gizmoType, data):
         """INTERNAL"""
-        current_id = str(self.gizmo_ids[gizmo_type])
-        self.gizmo_types[gizmo_type][current_id] = data
-        self.gizmo_ids[gizmo_type] += 1
+        current_id = str(self.gizmoIds[gizmoType])
+        self.activeGizmos[gizmoType][current_id] = data
+        self.gizmoIds[gizmoType] += 1
         return current_id
+    
+    def deleteGizmo(self, gizmoType, gizmoId):
+        """Deletes an active Gizmo object"""
+        gizmoDict = self.activeGizmos.get(gizmoType)
+        if gizmoDict != None and gizmoDict.get(gizmoId):
+            del gizmoDict[gizmoId]
 
     def newBlock(self, aabb, style, alwaysOnTop=True, persistInMilliseconds=None, fadeOut=False):
-        javaAABB, javaStyle = self._makeJavaABB(aabb), self._makeJavaStyle(style)
-        return self._addGizmo('blocks', [javaAABB, javaStyle, alwaysOnTop, persistInMilliseconds, fadeOut])
+        javaAABB, javaStyle = self._makeJavaAABB(aabb), self._makeJavaStyle(style)
+        return self._addGizmo("blocks", [javaAABB, javaStyle, alwaysOnTop, persistInMilliseconds, fadeOut])
     
     def newCircle(self, pos, radius, style, alwaysOnTop=True, persistInMilliseconds=None, fadeOut=False):
         javaPos, javaStyle = self._makeJavaPos(pos), self._makeJavaStyle(style)
-        return self._addGizmo('circles', [javaPos, radius, javaStyle, alwaysOnTop, persistInMilliseconds, fadeOut])
+        return self._addGizmo("circles", [javaPos, radius, javaStyle, alwaysOnTop, persistInMilliseconds, fadeOut])
     
     def newLine(self, pos1, pos2, argb, width, alwaysOnTop=True, persistInMilliseconds=None, fadeOut=False):
         javaPos1, javaPos2 = self._makeJavaPos(pos1), self._makeJavaPos(pos2)
-        return self._addGizmo('lines', [javaPos1, javaPos2, argb, width, alwaysOnTop, persistInMilliseconds, fadeOut])
+        return self._addGizmo("lines", [javaPos1, javaPos2, argb, width, alwaysOnTop, persistInMilliseconds, fadeOut])
     
     def newArrow(self, pos1, pos2, argb, width, alwaysOnTop=True, persistInMilliseconds=None, fadeOut=False):
         javaPos1, javaPos2 = self._makeJavaPos(pos1), self._makeJavaPos(pos2)
-        return self._addGizmo('arrows', [javaPos1, javaPos2, argb, width, alwaysOnTop, persistInMilliseconds, fadeOut])
+        return self._addGizmo("arrows", [javaPos1, javaPos2, argb, width, alwaysOnTop, persistInMilliseconds, fadeOut])
 
     def newPlane(self, pos1, pos2, face, style, alwaysOnTop=True, persistInMilliseconds=None, fadeOut=False):
         javaPos1, javaPos2, javaFace, javaStyle = self._makeJavaPos(pos1), self._makeJavaPos(pos2), self._makeJavaFace(face), self._makeJavaStyle(style)
-        return self._addGizmo('plane', [javaPos1, javaPos2, javaFace, javaStyle, alwaysOnTop, persistInMilliseconds, fadeOut])
+        return self._addGizmo("plane", [javaPos1, javaPos2, javaFace, javaStyle, alwaysOnTop, persistInMilliseconds, fadeOut])
     
     def newRect(self, pos1, pos2, pos3, pos4, style, alwaysOnTop=True, persistInMilliseconds=None, fadeOut=False):
         javaPos1, javaPos2, javaPos3, javaPos4, javaStyle = self._makeJavaPos(pos1), self._makeJavaPos(pos2), self._makeJavaPos(pos3), self._makeJavaPos(pos4), self._makeJavaStyle(style)
-        return self._addGizmo('rect', [javaPos1, javaPos2, javaPos3, javaPos4, javaStyle, alwaysOnTop, persistInMilliseconds, fadeOut])
+        return self._addGizmo("rect", [javaPos1, javaPos2, javaPos3, javaPos4, javaStyle, alwaysOnTop, persistInMilliseconds, fadeOut])
     
     def newPoint(self, pos, argb, size, alwaysOnTop=True, persistInMilliseconds=None, fadeOut=False):
         javaPos = self._makeJavaPos(pos)
-        return self._addGizmo('point', [javaPos, argb, size, alwaysOnTop, persistInMilliseconds, fadeOut])
+        return self._addGizmo("point", [javaPos, argb, size, alwaysOnTop, persistInMilliseconds, fadeOut])
+
 
 RenderGizmo = renderGizmo()
 
-def _applyGizmoProperties(gizmo, data, gizmo_dict, id):
-    if data[-3]:
+def applyProperties(gizmo, activeGizmo, activeGizmos, gizmoId):
+    if activeGizmo[-3]:
         gizmo.setAlwaysOnTop()
-    if data[-2]:
-        gizmo.persistForMillis(data[-2])
-        if data[-1]:
+    if activeGizmo[-2]:
+        gizmo.persistForMillis(activeGizmo[-2])
+        
+        if activeGizmo[-1]:
             gizmo.fadeOut()
-        del gizmo_dict[id]
-
-def processBlocks():
-    gizmo_dict = RenderGizmo.gizmo_types['blocks']
-    for id in list(gizmo_dict.keys()):
-        data = gizmo_dict[id]
-        gizmo = Gizmos.cuboid(data[0], data[1])
-        _applyGizmoProperties(gizmo, data, gizmo_dict, id)
-
-def processCircles():
-    gizmo_dict = RenderGizmo.gizmo_types['circles']
-    for id in list(gizmo_dict.keys()):
-        data = gizmo_dict[id]
-        gizmo = Gizmos.circle(data[0], data[1], data[2])
-        _applyGizmoProperties(gizmo, data, gizmo_dict, id)
-
-def processLines():
-    gizmo_dict = RenderGizmo.gizmo_types['lines']
-    for id in list(gizmo_dict.keys()):
-        data = gizmo_dict[id]
-        gizmo = Gizmos.line(data[0], data[1], data[2], data[3])
-        _applyGizmoProperties(gizmo, data, gizmo_dict, id)
-
-def processArrows():
-    gizmo_dict = RenderGizmo.gizmo_types['arrows']
-    for id in list(gizmo_dict.keys()):
-        data = gizmo_dict[id]
-        gizmo = Gizmos.arrow(data[0], data[1], data[2], data[3])
-        _applyGizmoProperties(gizmo, data, gizmo_dict, id)
-
-def processPlanes():
-    gizmo_dict = RenderGizmo.gizmo_types['plane']
-    for id in list(gizmo_dict.keys()):
-        data = gizmo_dict[id]
-        gizmo = Gizmos.rect(data[0], data[1], data[2], data[3])
-        _applyGizmoProperties(gizmo, data, gizmo_dict, id)
-
-def processRect():
-    gizmo_dict = RenderGizmo.gizmo_types['rect']
-    for id in list(gizmo_dict.keys()):
-        data = gizmo_dict[id]
-        gizmo = Gizmos.rect(data[0], data[1], data[2], data[3], data[4])
-        _applyGizmoProperties(gizmo, data, gizmo_dict, id)
-
-def processPoint():
-    gizmo_dict = RenderGizmo.gizmo_types['point']
-    for id in list(gizmo_dict.keys()):
-        data = gizmo_dict[id]
-        gizmo = Gizmos.point(data[0], data[1], data[2])
-        _applyGizmoProperties(gizmo, data, gizmo_dict, id)
+            
+        del activeGizmos[gizmoId]
 
 def onRender(event):
-    processBlocks()
-    processCircles()
-    processLines()
-    processArrows()
-    processPlanes()
-    processRect()
-    processPoint()
+    for gizmoType, activeGizmos in RenderGizmo.activeGizmos.items():
+        for gizmoId, activeGizmo in activeGizmos.items():
+            gizmo = drawGizmo(gizmoType, activeGizmo)
+            applyProperties(gizmo, activeGizmo, activeGizmos, gizmoId)
 
 add_event_listener("render", onRender)
